@@ -37,7 +37,9 @@ namespace Tetris
 
 
 
-        // Block and Bogs        
+        // Block and Bogs
+        // Bag adalah tempat block selanjutnya diletakkan
+        // Bogs adalah block selanjutnya yang akan dimainkan
         static int[] bag;
         static int[] nextBag;
 
@@ -50,6 +52,8 @@ namespace Tetris
         static int timer = 0;
         static int amount = 0;
 
+        //Level
+        static int level = 1;
 
         #region Assets
 
@@ -113,10 +117,10 @@ namespace Tetris
             Thread inputThread = new Thread(Input);
             inputThread.Start();
 
-            // Generate bag / current block
+            // Generate bag dan current block
             bag = GenerateBag();
             nextBag = GenerateBag();
-            NewBlock();
+            BlockBaru();
 
             // Background Kosong
             for (int y = 0; y < baris; y++)
@@ -145,20 +149,20 @@ namespace Tetris
                 input = new ConsoleKeyInfo(); // Reset input var
 
 
-                // RENDER CURRENT
-                char[,] view = tampilanMapGameBerjalan(); // Render view (Playing field)
+                // RENDER MAP
+                char[,] view = tampilanMapGameBerjalan(); // Render map (Playing field)
 
-                // RENDER HOLD
-                char[,] hold = blockYangLagiMain(); // Render hold (the current held block)
+                // RENDER BLOCK DIMAINKAN
+                char[,] hold = blockYangLagiMain(); // Render hold (block yang dimainkan)
 
 
                 //RENDER UP NEXT
-                char[,] next = nextBlockTampil(); // Render the next three blocks as an 'up next' feature
+                char[,] next = nextBlockTampil(); // Render 3 block selanjutnya
 
                 // PRINT VIEW
-                Print(view, hold, next); // Print everything to the screen
+                Print(view, hold, next); // Ngeprint semuanya ke layar
 
-                Thread.Sleep(20); // Wait to not overload the processor (I think it's better because it has no impact on game feel)
+                Thread.Sleep(20); // Wait to not overload the processor
             }
 
 
@@ -190,7 +194,7 @@ namespace Tetris
 
                     break;
 
-                // Hard drop
+                // Hard drop = spasi
                 case ConsoleKey.Spacebar:
                     int i = 0;
                     while (true)
@@ -219,15 +223,14 @@ namespace Tetris
                     {
                         holdIndex = IndexSekarang;
                         holdChar = PosisiSementaraChar;
-                        NewBlock();
+                        BlockBaru();
                     }
-                    // If there is:
                     else
                     {
-                        if (!Collision(holdIndex, bg, PosisiSementaraX, PosisiSementaraY, 0)) // Check for collision
+                        if (!Collision(holdIndex, bg, PosisiSementaraX, PosisiSementaraY, 0)) // cek tabrakan
                         {
 
-                            // Switch current and hold
+                            // block sekarang dan block yg di hold tukaran
                             int c = IndexSekarang;
                             char ch = PosisiSementaraChar;
                             IndexSekarang = holdIndex;
@@ -256,7 +259,7 @@ namespace Tetris
         static void BlockDownCollision()
         {
 
-            // Add blocks from current to background
+            // Mengubah Block yang dimainkan menjadi backgroung 
             for (int i = 0; i < positions.GetLength(2); i++)
             {
                 bg[positions[IndexSekarang, PosisiSementaraRotasi, i, 1] + PosisiSementaraY, positions[IndexSekarang, PosisiSementaraRotasi, i, 0] + PosisiSementaraX] = PosisiSementaraChar;
@@ -265,10 +268,10 @@ namespace Tetris
             // Loop 
             while (true)
             {
-                // Check for line
+                // Cek garis
                 int lineY = Line(bg);
 
-                // If a line is detected
+                // Garis terdeteksi
                 if (lineY != -1)
                 {
                     ClearLine(lineY);
@@ -277,15 +280,14 @@ namespace Tetris
                 }
                 break;
             }
-            // New block
-            NewBlock();
+            // Block Baru
+            BlockBaru();
 
         }
 
 
         static void Restart()
         {
-            // Quite messy but it kinda works. Code by: KeremEskicinar
             var applicationPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
             Process.Start(applicationPath);
             Environment.Exit(Environment.ExitCode);
@@ -297,12 +299,12 @@ namespace Tetris
             // Clear said line
             for (int x = 0; x < kolom; x++) bg[lineY, x] = '-';
 
-            // Loop through all blocks above line
+            // Loop semua blok di atas garis
             for (int y = lineY - 1; y > 0; y--)
             {
                 for (int x = 0; x < kolom; x++)
                 {
-                    // Move each character down
+                    // Block bergerak kebawah
                     char character = bg[y, x];
                     if (character != '-')
                     {
@@ -318,14 +320,14 @@ namespace Tetris
         {
             char[,] view = new char[baris, kolom];
 
-            // Make view equal to bg
+            // Membuat View sama dengan Bcakground
             for (int y = 0; y < baris; y++)
                 for (int x = 0; x < kolom; x++)
                     view[y, x] = bg[y, x];
 
 
 
-            // Overlay current
+            // Overlay
             for (int i = 0; i < positions.GetLength(2); i++)
             {
                 view[positions[IndexSekarang, PosisiSementaraRotasi, i, 1] + PosisiSementaraY, positions[IndexSekarang, PosisiSementaraRotasi, i, 0] + PosisiSementaraX] = PosisiSementaraChar;
@@ -336,16 +338,13 @@ namespace Tetris
         static char[,] blockYangLagiMain()
         {
             char[,] hold = new char[holdSizeY, holdSizeX];
-            // Hold = ' ' array
             for (int y = 0; y < holdSizeY; y++)
                 for (int x = 0; x < holdSizeX; x++)
                     hold[y, x] = ' ';
 
 
-            // If there is a held block
             if (holdIndex != -1)
             {
-                // Overlay blocks from hold
                 for (int i = 0; i < positions.GetLength(2); i++)
                 {
                     hold[positions[holdIndex, 0, i, 1] + 1, positions[holdIndex, 0, i, 0] + 1] = holdChar;
@@ -363,12 +362,12 @@ namespace Tetris
 
 
             int nextBagIndex = 0;
-            for (int i = 0; i < 3; i++) // Next 3 blocks
+            for (int i = 0; i < 3; i++) // 3 Block selanjutnya
             {
 
                 for (int l = 0; l < positions.GetLength(2); l++)
                 {
-                    if (i + bagIndex >= 7) // If we need to acces the next bag
+                    if (i + bagIndex >= 7) // Kalau mau akses bag selanjutnya
                         next[positions[nextBag[nextBagIndex], 0, l, 1] + 5 * i, positions[nextBag[nextBagIndex], 0, l, 0] + 1] = characters[nextBag[nextBagIndex]];
                     else
                         next[positions[bag[bagIndex + i], 0, l, 1] + 5 * i, positions[bag[bagIndex + i], 0, l, 0] + 1] = characters[bag[bagIndex + i]];
@@ -395,7 +394,7 @@ namespace Tetris
                     else i = view[y, (x - holdSizeX)];
 
 
-                    // Colours
+                    // warna
                     switch (i)
                     {
                         case 'O':
@@ -408,16 +407,16 @@ namespace Tetris
                             break;
 
                         case 'T':
-                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.Write(i);
                             break;
 
                         case 'S':
-                            Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                            Console.ForegroundColor = ConsoleColor.Magenta;
                             Console.Write(i);
                             break;
                         case 'Z':
-                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write(i);
                             break;
                         case 'L':
@@ -426,11 +425,11 @@ namespace Tetris
                             break;
 
                         case 'J':
-                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            Console.ForegroundColor = ConsoleColor.Gray;
                             Console.Write(i);
                             break;
                         default:
-                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                            Console.ForegroundColor = ConsoleColor.White;
                             Console.Write(i);
                             break;
                     }
@@ -441,10 +440,21 @@ namespace Tetris
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     Console.Write("   " + score);
                 }
+                else if (y == 2)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+
+                    level = score / 500 + 1;
+                    if (level >= 50)
+                    {
+                        timer = timer + 1;
+                    }
+                    Console.Write("Level :   " + level);
+                }
                 Console.WriteLine();
             }
 
-            // Reset console cursor position
+            // Reset posisi console cursor
             Console.SetCursorPosition(0, Console.CursorTop - baris);
         }
         static int[] GenerateBag()
@@ -502,9 +512,9 @@ namespace Tetris
             return -1;
         }
 
-        static void NewBlock()
+        static void BlockBaru()
         {
-            // Check if new bag is necessary
+            // apakah bag selanjutnya diperlukan
             if (bagIndex >= 7)
             {
                 bagIndex = 0;
@@ -518,7 +528,7 @@ namespace Tetris
             PosisiSementaraChar = characters[bag[bagIndex]];
             IndexSekarang = bag[bagIndex];
 
-            // Check if the next block position collides. If it does its gameover
+            // Jika Posisi Block Tabrakan Game over
             if (Collision(IndexSekarang, bg, PosisiSementaraX, PosisiSementaraY, PosisiSementaraRotasi) && amount > 0)
             {
                 GameOver();
@@ -530,18 +540,17 @@ namespace Tetris
 
         static void GameOver()
         {
-            // Possible restart functionality
             Environment.Exit(1);
         }
         static void Input()
         {
             while (true)
             {
-                // Get input
+                // dapat input
                 input = Console.ReadKey(true);
             }
         }
+
     }
 }
-
 
