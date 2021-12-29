@@ -47,7 +47,7 @@ namespace Tetris
         static int IndexSekarang;
 
 
-        // misc
+        // Timer
         static int maxTime = 20;
         static int timer = 0;
         static int amount = 0;
@@ -475,7 +475,7 @@ namespace Tetris
         }
         static bool Collision(int index, char[,] bg, int x, int y, int rot)
         {
-
+            // program yg akan digunakan untuk ngecek 
             for (int i = 0; i < positions.GetLength(2); i++)
             {
                 // Check if out of bounds
