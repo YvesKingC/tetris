@@ -47,7 +47,7 @@ namespace Tetris
         static int IndexSekarang;
 
 
-        // Timer
+        // Timer/Kecepatan
         static int maxTime = 20;
         static int timer = 0;
         static int amount = 0;
@@ -218,7 +218,7 @@ namespace Tetris
                 // Hold block
                 case ConsoleKey.Enter:
 
-                    // If there isnt a current held block:
+                    // Kalau tidak ada block di hold:
                     if (holdIndex == -1)
                     {
                         holdIndex = IndexSekarang;
@@ -445,7 +445,7 @@ namespace Tetris
                     Console.ForegroundColor = ConsoleColor.DarkGray;
 
                     level = score / 500 + 1;
-                    if (level >= 50)
+                    if (level <= 50 && level !=1)
                     {
                         timer = timer + 1;
                     }
