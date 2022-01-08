@@ -388,7 +388,7 @@ namespace Tetris
                 for (int x = 0; x < holdSizeX + kolom + upNextSize; x++)
                 {
                     char i = ' ';
-                    // Add hold + Main View + up next to view (basically dark magic)
+                    // tambahkan ke hold + main view + up next
                     if (x < holdSizeX) i = hold[y, x];
                     else if (x >= holdSizeX + kolom) i = next[y, x - kolom - upNextSize];
                     else i = view[y, (x - holdSizeX)];
