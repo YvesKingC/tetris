@@ -242,7 +242,7 @@ namespace Tetris
                     }
                     break;
 
-                // Move down faster
+                // Turun lbh cpt
                 case ConsoleKey.S:
                 case ConsoleKey.DownArrow:
                     timer = maxTime;
